@@ -1,120 +1,65 @@
-## some instructions for testing your makeCacheMatrix and cacheSolve functions
+#FUNCTION 1: makeCacheMatrix
+#creates an R object that stores a matrix and its inverse.
 
-This is from this post: "Simple test matrices for the lexical scoping programming assignment"
+makeCacheMatrix <- function(x = numeric()) {
+   #MakeCacheMatrix environment comes under global environment
+  
+    m <- NULL # intitializing m, x already initialized as function argument above
+   # x and m are data objects inside MakeCacheMatrix environment
+  
+    #FUNCTION 1A: Has it's own environment inside MakeCacheMatrix environment
+     set <- function(y) {
+      x <<- y
+      m <<- NULL
+      # This function does the following:
+      # 1.Assign the input argument to the x object in the parent environment &
+      # 2.Assign the value of NULL to the m object in the parent environment & clears any value of m that 
+        #had been cached by a prior execution of cachSolve().
+   }
+   
+     #FUNCTION 1B:Has it's own environment inside MakeCacheMatrix environment
+     #defines the getter for the matrix x.
+     #lexical scoping features in R allows this function to retrieve x from makeCacheMatrix environment
+      get <- function() x
+   
+      #FUNCTION 1C:Has it's own environment inside MakeCacheMatrix environment
+      #This function sets the vaule of the inverse to the variable m which is defined in the parent environment
+      setinverse <- function(inverse) m <<- inverse
+   
+      #FUNCTION 1D:Has it's own environment inside MakeCacheMatrix environment
+      #This function retrieves the correct value of m using lexical scoping
+      getinverse <- function() m
+   
+   # assigns each of these functions as an element within a list(),
+   #and returns it to the parent environment bacause of whihc we can use $ to extract information
+   list(set = set, get = get,
+        setinverse = setinverse,
+        getinverse = getinverse)
+}
 
-https://www.coursera.org/learn/r-programming/discussions/weeks/3/threads/ePlO1eMdEeahzg7_4P4Vvg
+#FUNCTION2:cacheSolve
+#requires an argument that is returned by makeCacheMatrix()
+#in order to retrieve the inverse from the cached value 
+#that is stored in the makeCacheMatrix() object's environment.
 
-
-R session:
-
-> # Matrices for testing the R functions 
-> # makeCacheMatrix and cacheSolve
-> # in the Coursera R Programming Course
-> #
-> # First, 
-> # If you haven't read Leonard Greski's invaluable
-> # [TIPS] Demystifying makeVector()  Post
-> # be sure to do so.
-> #
-> # A simple matrix m1 with a simple matrix inverse n1
-> # Define
-> m1 <- matrix(c(1/2, -1/4, -1, 3/4), nrow = 2, ncol = 2)
-> m1
-      [,1]  [,2]
-[1,]  0.50 -1.00
-[2,] -0.25  0.75
-> 
-> # You can use m1 to test your 
-> # makeCacheMatrix and cacheSolve functions.
-> # Since the grading is done on the correctness of your 
-> # makeCacheMatrix and cacheSolve functions and your 
-> # comments on how they work, using this (or some other)   
-> # test matrix to check your code 
-> # before submitting it 
-> # is OK relative to the Coursera Honor Code.
-> # (Checking code with test cases is always a good idea.)
-> #
-> # m1 was constructed (using very simple linear algebra, so
-> # no references are given, almost surely the examples
-> # in this post have been given many times before) 
-> # to have a simple marrix inverse, call it n1.
-> # This means  m1 %*% n1 (%*% is matrix multiply in R) 
-> # is the 2 row by 2 column Identity matrix I2
-> I2 <- matrix(c(1,0,0,1), nrow = 2, ncol = 2)
-> I2
-     [,1] [,2]
-[1,]    1    0
-[2,]    0    1
-> 
-> # And so (by linear algebra) n1 %*% m1 is also equal I2.
-> # (If n1 is the inverse of m1 then m1 is the inverse of n1.)
-> # With m1 defined as above, n1 ( the inverse of m1) is
-> n1 <- matrix(c(6,2,8,4), nrow = 2, ncol = 2)
-> n1
-     [,1] [,2]
-[1,]    6    8
-[2,]    2    4
-> 
-> # Checks:
-> m1 %*% n1
-     [,1] [,2]
-[1,]    1    0
-[2,]    0    1
-> 
-> n1 %*% m1
-     [,1] [,2]
-[1,]    1    0
-[2,]    0    1
-> 
-> solve(m1)
-     [,1] [,2]
-[1,]    6    8
-[2,]    2    4
-> 
-> solve(n1)
-      [,1]  [,2]
-[1,]  0.50 -1.00
-[2,] -0.25  0.75
-> 
-> # So if you have programmed your functions 
-> # correctly (in the file cachematrix.R),
-> # (that, and your comments-explanation of how they work
-> # are what you are graded on)
-> # and sourced cachematrix.R so they are 
-> # available in your R session workspace, then doing 
-> #
-> myMatrix_object <- makeCacheMatrix(m1)
-> 
-> # and then
-> # cacheSolve(myMatrix_object)
-> 
-> # should return exactly the matrix n1
-> cacheSolve(myMatrix_object)
-     [,1] [,2]
-[1,]    6    8
-[2,]    2    4
-> 
-> # calling cacheSolve again should retrieve (not recalculate)
-> # n1
-> cacheSolve(myMatrix_object)
-getting cached data
-     [,1] [,2]
-[1,]    6    8
-[2,]    2    4
-> 
-> # you can use the set function to "put in" a new matrix.
-> # For example n2
-> n2 <- matrix(c(5/8, -1/8, -7/8, 3/8), nrow = 2, ncol = 2)
-> myMatrix_object$set(n2)
-> # and obtain its matrix inverse by
-> cacheSolve(myMatrix_object)
-     [,1] [,2]
-[1,]    3    7
-[2,]    1    5
-> 
-> cacheSolve(myMatrix_object)
-getting cached data
-     [,1] [,2]
-[1,]    3    7
-[2,]    1    5
-> 
+cacheSolve <- function(x, ...) {
+   
+   #attempts to retrieve a inverse from the object passed in as the argument
+   #and stores in m
+   m <- x$getinverse()
+   
+   if(!is.null(m)) {
+      #checks ot see if m is a null or not
+      #if not then it retrieves the cache data
+      message("getting cached data")
+      return(m)
+   }
+   
+   # if the value is false then it finds inverse using "solve" function 
+   #and then returns the value of the inverse to the parent environment 
+   #by printing the inverse object.
+   data <- x$get()
+   m <- solve(data, ...)
+   x$setinverse(m)
+   m
+}
